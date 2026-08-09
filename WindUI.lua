@@ -1,11 +1,3 @@
--- WindUI Boreal
--- Version: v0.0.1
--- BuildDate: 2026-05-31
--- Description: Roblox UI Library for scripts
--- Repository: https://github.com/orialdev/windui-boreal
--- Discord: http://discord.gg/B3dEqP2EX6
--- License: MIT
-
 local a={cache={}::any}do do local function __modImpl()local b=(cloneref or clonereference or function(b)return b end)
 
 local d=b(game:GetService"ReplicatedStorage":WaitForChild("GetIcons",99999):InvokeServer())
