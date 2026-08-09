@@ -18078,15 +18078,45 @@ SearchInputBox,
 },true),
 })
 
+local TabSlideOffset=UDim2.new(0,-24,0,0)
+local TabSlideHome=UDim2.new(0,0,0,0)
+
+local function ShowTabAnimated(Tab)
+local Main=Tab.UIElements.Main
+if Main.Visible then return end
+Main.Visible=true
+local ContentFrame=Main:FindFirstChild("Frame")
+if ContentFrame then
+ContentFrame.Position=TabSlideOffset
+al(ContentFrame,.18,{Position=TabSlideHome},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+end
+end
+
+local function HideTabAnimated(Tab)
+local Main=Tab.UIElements.Main
+if not Main.Visible then return end
+local ContentFrame=Main:FindFirstChild("Frame")
+if ContentFrame then
+al(ContentFrame,.12,{Position=TabSlideOffset},Enum.EasingStyle.Quint,Enum.EasingDirection.In):Play()
+end
+task.delay(.12,function()
+Main.Visible=false
+if ContentFrame then
+ContentFrame.Position=TabSlideHome
+end
+end)
+end
+
 local function FilterTabsBySearch(Query)
 Query=string.lower(Query or"")
 if not av.TabModule then return end
 for _,Tab in next,av.TabModule.Tabs do
 if Tab.UIElements and Tab.UIElements.Main then
-if Query==""then
-Tab.UIElements.Main.Visible=true
+local Matches=Query==""or string.find(string.lower(Tab.Title or""),Query,1,true)~=nil
+if Matches then
+ShowTabAnimated(Tab)
 else
-Tab.UIElements.Main.Visible=string.find(string.lower(Tab.Title or""),Query,1,true)~=nil
+HideTabAnimated(Tab)
 end
 end
 end
