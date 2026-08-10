@@ -15676,50 +15676,61 @@ if not an then return end
 
 local ao=ak.AnimatedTabTitleType or"Error"
 local ap=game:GetService"TweenService"
-
-if ao=="Rainbow" then
-task.spawn(function()
 local aq=an.TextColor3
-for ar=0,1,0.05 do
-if not an or not an.Parent then return end
-an.TextColor3=Color3.fromHSV(ar,1,1)
-task.wait(0.02)
+local ar=an.TextTransparency
+local as=an.Position
+
+local function StillActive()
+return am.Selected and an.Parent and ak.AnimatedTabTitleEnabled and ak.AnimatedTabTitleType==ao
 end
-if an and an.Parent then
+
+task.spawn(function()
+if ao=="Rainbow" then
+local at=0
+while StillActive() do
+an.TextColor3=Color3.fromHSV(at,1,1)
+at=(at+0.02)%1
+task.wait(0.03)
+end
+if an.Parent then
 an.TextColor3=aq
 end
-end)
 elseif ao=="FadeInOut" then
-task.spawn(function()
-local aq=an.TextTransparency
-ap:Create(an,TweenInfo.new(0.15,Enum.EasingStyle.Sine),{TextTransparency=1}):Play()
-task.wait(0.15)
-if an and an.Parent then
-ap:Create(an,TweenInfo.new(0.25,Enum.EasingStyle.Sine),{TextTransparency=aq}):Play()
+while StillActive() do
+ap:Create(an,TweenInfo.new(0.5,Enum.EasingStyle.Sine),{TextTransparency=1}):Play()
+task.wait(0.5)
+if not StillActive() then break end
+ap:Create(an,TweenInfo.new(0.5,Enum.EasingStyle.Sine),{TextTransparency=ar}):Play()
+task.wait(0.5)
 end
-end)
+if an.Parent then
+an.TextTransparency=ar
+end
 else
-task.spawn(function()
-local aq=an.TextColor3
-local ar=an.Position
-ap:Create(an,TweenInfo.new(0.08),{TextColor3=Color3.fromRGB(255,70,70)}):Play()
-local as={
-UDim2.new(ar.X.Scale,ar.X.Offset-4,ar.Y.Scale,ar.Y.Offset),
-UDim2.new(ar.X.Scale,ar.X.Offset+4,ar.Y.Scale,ar.Y.Offset),
-UDim2.new(ar.X.Scale,ar.X.Offset-3,ar.Y.Scale,ar.Y.Offset),
-UDim2.new(ar.X.Scale,ar.X.Offset+3,ar.Y.Scale,ar.Y.Offset),
-ar,
+local at={
+UDim2.new(as.X.Scale,as.X.Offset-4,as.Y.Scale,as.Y.Offset),
+UDim2.new(as.X.Scale,as.X.Offset+4,as.Y.Scale,as.Y.Offset),
+UDim2.new(as.X.Scale,as.X.Offset-3,as.Y.Scale,as.Y.Offset),
+UDim2.new(as.X.Scale,as.X.Offset+3,as.Y.Scale,as.Y.Offset),
+as,
 }
-for at=1,#as do
-if not an or not an.Parent then return end
-an.Position=as[at]
+while StillActive() do
+ap:Create(an,TweenInfo.new(0.08),{TextColor3=Color3.fromRGB(255,70,70)}):Play()
+for au=1,#at do
+if not StillActive() then break end
+an.Position=at[au]
 task.wait(0.035)
 end
-if an and an.Parent then
+if not StillActive() then break end
 ap:Create(an,TweenInfo.new(0.15),{TextColor3=aq}):Play()
+task.wait(0.6)
+end
+if an.Parent then
+an.Position=as
+an.TextColor3=aq
+end
 end
 end)
-end
 end
 
 function ak.SelectTab(al,am)
