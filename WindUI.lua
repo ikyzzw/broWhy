@@ -1,3 +1,5 @@
+-- WindUI Modified
+-- All Credits Goes To Footagesus
 local a={cache={}::any}do do local function __modImpl()local b=(cloneref or clonereference or function(b)return b end)
 
 local d=b(game:GetService"ReplicatedStorage":WaitForChild("GetIcons",99999):InvokeServer())
@@ -18287,6 +18289,8 @@ au.WindUI:ToggleAcrylic(true)
 end)
 end)
 end
+local BackgroundBlurEffect=nil
+
 function av.Close(C)
 local F={}
 
@@ -18368,6 +18372,10 @@ end
 if av.AcrylicPaint and av.AcrylicPaint.Model then
 av.AcrylicPaint.Model:Destroy()
 end
+if BackgroundBlurEffect then
+BackgroundBlurEffect:Destroy()
+BackgroundBlurEffect=nil
+end
 av.Destroyed=true
 task.wait(0.4)
 au.WindUI.ScreenGui:Destroy()
@@ -18404,6 +18412,38 @@ av.UIElements.Main.Background.ImageTransparency=F and au.WindUI.TransparencyValu
 
 
 
+end
+
+function av.SetBackgroundBlur(C,F,H)
+local TargetSize=H or 24
+
+if F then
+if not BackgroundBlurEffect or not BackgroundBlurEffect.Parent then
+BackgroundBlurEffect=Instance.new"BlurEffect"
+BackgroundBlurEffect.Name="WindUI_BackgroundBlur"
+BackgroundBlurEffect.Size=0
+BackgroundBlurEffect.Parent=game:GetService"Lighting"
+end
+
+av.BackgroundBlurEnabled=true
+BackgroundBlurEffect.Enabled=true
+
+al(BackgroundBlurEffect,.3,{Size=TargetSize},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
+else
+av.BackgroundBlurEnabled=false
+
+if BackgroundBlurEffect then
+local G=BackgroundBlurEffect
+al(G,.3,{Size=0},Enum.EasingStyle.Quint,Enum.EasingDirection.In):Play()
+task.delay(.3,function()
+if G and G.Parent and not av.BackgroundBlurEnabled then
+G.Enabled=false
+end
+end)
+end
+end
+
+return av
 end
 
 function av.LockAll(C)
