@@ -1,5 +1,3 @@
--- WindUI Modified
--- All Credits Goes To Footagesus
 local a={cache={}::any}do do local function __modImpl()local b=(cloneref or clonereference or function(b)return b end)
 
 local d=b(game:GetService"ReplicatedStorage":WaitForChild("GetIcons",99999):InvokeServer())
@@ -18301,6 +18299,10 @@ end)
 end
 
 au.WindUI:ToggleAcrylic(false)
+
+if av.BackgroundBlurEnabled then
+av:SetBackgroundBlur(false)
+end
 
 av.UIElements.Main:WaitForChild"Main".Visible=false
 
