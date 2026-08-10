@@ -1,3 +1,7 @@
+-- Free To Use :)
+-- because I don't own this maybe i do modify but it originally not mine
+-- all credits go to footagesus
+
 local a={cache={}::any}do do local function __modImpl()local b=(cloneref or clonereference or function(b)return b end)
 
 local d=b(game:GetService"ReplicatedStorage":WaitForChild("GetIcons",99999):InvokeServer())
@@ -15131,6 +15135,8 @@ ak.TabCount=0
 ak.ToolTipParent=an
 ak.TabHighlight=ao
 ak.OnChangeFunc=function()end
+ak.AnimatedTabTitleEnabled=false
+ak.AnimatedTabTitleType="Error"
 return ak
 end
 
@@ -15663,6 +15669,59 @@ end
 return nil
 end
 
+local function PlayTabTitleAnimation(am)
+if not ak.AnimatedTabTitleEnabled then return end
+local an=am.UIElements and am.UIElements.Main and am.UIElements.Main.Frame and am.UIElements.Main.Frame.TextLabel
+if not an then return end
+
+local ao=ak.AnimatedTabTitleType or"Error"
+local ap=game:GetService"TweenService"
+
+if ao=="Rainbow" then
+task.spawn(function()
+local aq=an.TextColor3
+for ar=0,1,0.05 do
+if not an or not an.Parent then return end
+an.TextColor3=Color3.fromHSV(ar,1,1)
+task.wait(0.02)
+end
+if an and an.Parent then
+an.TextColor3=aq
+end
+end)
+elseif ao=="FadeInOut" then
+task.spawn(function()
+local aq=an.TextTransparency
+ap:Create(an,TweenInfo.new(0.15,Enum.EasingStyle.Sine),{TextTransparency=1}):Play()
+task.wait(0.15)
+if an and an.Parent then
+ap:Create(an,TweenInfo.new(0.25,Enum.EasingStyle.Sine),{TextTransparency=aq}):Play()
+end
+end)
+else
+task.spawn(function()
+local aq=an.TextColor3
+local ar=an.Position
+ap:Create(an,TweenInfo.new(0.08),{TextColor3=Color3.fromRGB(255,70,70)}):Play()
+local as={
+UDim2.new(ar.X.Scale,ar.X.Offset-4,ar.Y.Scale,ar.Y.Offset),
+UDim2.new(ar.X.Scale,ar.X.Offset+4,ar.Y.Scale,ar.Y.Offset),
+UDim2.new(ar.X.Scale,ar.X.Offset-3,ar.Y.Scale,ar.Y.Offset),
+UDim2.new(ar.X.Scale,ar.X.Offset+3,ar.Y.Scale,ar.Y.Offset),
+ar,
+}
+for at=1,#as do
+if not an or not an.Parent then return end
+an.Position=as[at]
+task.wait(0.035)
+end
+if an and an.Parent then
+ap:Create(an,TweenInfo.new(0.15),{TextColor3=aq}):Play()
+end
+end)
+end
+end
+
 function ak.SelectTab(al,am)
 local an=ResolveTabIndex(am)
 if not an then
@@ -15711,6 +15770,7 @@ ImageTransparency="TabIconTransparencyActive"
 },0.15)
 end
 ak.Tabs[an].Selected=true
+PlayTabTitleAnimation(ak.Tabs[an])
 
 task.spawn(function()
 for ap,aq in next,ak.Containers do
@@ -18443,6 +18503,31 @@ G.Enabled=false
 end
 end)
 end
+end
+
+return av
+end
+
+function av.AnimatedTabTitle(C,F,H)
+local TypeName="Error"
+
+if type(H)=="number" then
+local TypeMap={[1]="Error",[2]="Rainbow",[3]="FadeInOut"}
+TypeName=TypeMap[H] or"Error"
+elseif type(H)=="string" then
+local Lower=string.lower(H)
+if Lower=="rainbow" then
+TypeName="Rainbow"
+elseif Lower=="fade in out"or Lower=="fadeinout"or Lower=="fade" then
+TypeName="FadeInOut"
+else
+TypeName="Error"
+end
+end
+
+if av.TabModule then
+av.TabModule.AnimatedTabTitleEnabled=F and true or false
+av.TabModule.AnimatedTabTitleType=TypeName
 end
 
 return av
