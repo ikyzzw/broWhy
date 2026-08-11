@@ -15706,6 +15706,32 @@ end
 if an.Parent then
 an.TextTransparency=ar
 end
+elseif ao=="Highlight" then
+local at=Instance.new"UIGradient"
+at.Color=ColorSequence.new{
+ColorSequenceKeypoint.new(0,aq),
+ColorSequenceKeypoint.new(0.45,aq),
+ColorSequenceKeypoint.new(0.5,Color3.new(1,1,1)),
+ColorSequenceKeypoint.new(0.55,aq),
+ColorSequenceKeypoint.new(1,aq),
+}
+at.Offset=Vector2.new(-1,0)
+at.Parent=an
+
+while StillActive() do
+at.Offset=Vector2.new(-1,0)
+ap:Create(at,TweenInfo.new(0.75,Enum.EasingStyle.Sine),{Offset=Vector2.new(1,0)}):Play()
+task.wait(0.75)
+if not StillActive() then break end
+task.wait(0.35)
+end
+
+if at and at.Parent then
+at:Destroy()
+end
+if an.Parent then
+an.TextColor3=aq
+end
 else
 local at={
 UDim2.new(as.X.Scale,as.X.Offset-4,as.Y.Scale,as.Y.Offset),
@@ -15732,6 +15758,7 @@ end
 end
 end)
 end
+ak.PlayTabTitleAnimation=PlayTabTitleAnimation
 
 function ak.SelectTab(al,am)
 local an=ResolveTabIndex(am)
@@ -18523,7 +18550,7 @@ function av.AnimatedTabTitle(C,F,H)
 local TypeName="Error"
 
 if type(H)=="number" then
-local TypeMap={[1]="Error",[2]="Rainbow",[3]="FadeInOut"}
+local TypeMap={[1]="Error",[2]="Rainbow",[3]="FadeInOut",[4]="Highlight"}
 TypeName=TypeMap[H] or"Error"
 elseif type(H)=="string" then
 local Lower=string.lower(H)
@@ -18531,6 +18558,8 @@ if Lower=="rainbow" then
 TypeName="Rainbow"
 elseif Lower=="fade in out"or Lower=="fadeinout"or Lower=="fade" then
 TypeName="FadeInOut"
+elseif Lower=="highlight" then
+TypeName="Highlight"
 else
 TypeName="Error"
 end
@@ -18539,6 +18568,10 @@ end
 if av.TabModule then
 av.TabModule.AnimatedTabTitleEnabled=F and true or false
 av.TabModule.AnimatedTabTitleType=TypeName
+
+if F and av.TabModule.SelectedTab and av.TabModule.Tabs[av.TabModule.SelectedTab] and av.TabModule.PlayTabTitleAnimation then
+av.TabModule.PlayTabTitleAnimation(av.TabModule.Tabs[av.TabModule.SelectedTab])
+end
 end
 
 return av
