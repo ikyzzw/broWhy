@@ -2,6 +2,14 @@
 -- because I don't own this maybe i do modify but it originally not mine
 -- all credits go to footagesus
 
+-- WindUI Boreal
+-- Version: v0.0.1
+-- BuildDate: 2026-05-31
+-- Description: Roblox UI Library for scripts
+-- Repository: https://github.com/orialdev/windui-boreal
+-- Discord: http://discord.gg/B3dEqP2EX6
+-- License: MIT
+
 local a={cache={}::any}do do local function __modImpl()local b=(cloneref or clonereference or function(b)return b end)
 
 local d=b(game:GetService"ReplicatedStorage":WaitForChild("GetIcons",99999):InvokeServer())
@@ -15718,6 +15726,9 @@ ColorSequenceKeypoint.new(1,aq),
 at.Offset=Vector2.new(-1,0)
 at.Parent=an
 
+local av2=an.RichText
+an.RichText=false
+
 while StillActive() do
 at.Offset=Vector2.new(-1,0)
 ap:Create(at,TweenInfo.new(0.75,Enum.EasingStyle.Sine),{Offset=Vector2.new(1,0)}):Play()
@@ -15731,6 +15742,7 @@ at:Destroy()
 end
 if an.Parent then
 an.TextColor3=aq
+an.RichText=av2
 end
 else
 local at={
