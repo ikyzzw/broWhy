@@ -1,40 +1,6 @@
---[[
-	Minimal UI Library
-	----------------------------------------------------------------
-	A lightweight Roblox GUI library. It follows the same structural
-	basics you'd recognize from classic window/tab libraries like
-	Vape V4 -- a draggable Main frame that tweens open/closed, a
-	sidebar of tabs, and per-tab element builders returned as a
-	table of methods -- but it's written fresh, trimmed down, and
-	built gradient-first:
-	  - gradient window border
-	  - gradient toggle switches (crossfaded on/off)
-	  - gradient slider fill
-
-	Usage:
-		local UI = require(path.to.MinimalUI) -- or loadstring if you host it
-		local Window = UI:CreateWindow({ Title = "My Menu" })
-
-		-- second arg is optional: a lucide name ("house"), an sf-symbols
-		-- name ("sfsymbols:HouseFill"), or a raw rbxassetid:// string.
-		-- Needs Footagesus/Icons, loaded lazily below -- see note.
-		local Tab = Window:CreateTab("Main", "house")
-
-		Tab:CreateToggle("Enabled", false, function(value)
-			print("Enabled:", value)
-		end)
-
-		Tab:CreateSlider("Speed", 0, 100, 50, function(value)
-			print("Speed:", value)
-		end)
-
-		Window:Notify("Hello", "This is a notification.", 4)
-
-	Note: loadstring / game:HttpGetAsync (used below to fetch the icon pack)
-	are executor-specific -- they don't exist in a plain Studio LocalScript.
-	If they're unavailable, icon loading fails silently and tabs just render
-	without an icon.
-]]
+-- made with claude ai
+-- if you don't like this please ignore.
+-- basics from VapeV4
 
 local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
@@ -627,6 +593,87 @@ function Library:CreateWindow(config)
 				TextSize = 12,
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
+		end
+
+		----------------------------------------------------------------
+		function Tab:CreateParagraph(title, content)
+			title = title or ""
+			content = content or ""
+
+			-- AutomaticSize.Y on the holder + both labels lets the block
+			-- grow to fit however much text SetTitle/SetContent puts in,
+			-- and the page's UIListLayout picks up the new height via
+			-- AbsoluteContentSize automatically (see `layout` above).
+			local holder = new("Frame", {
+				Parent = page,
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				BackgroundColor3 = Theme.Element,
+			})
+			corner(holder, 8)
+			new("UIPadding", {
+				Parent = holder,
+				PaddingTop = UDim.new(0, 12),
+				PaddingLeft = UDim.new(0, 12),
+				PaddingRight = UDim.new(0, 12),
+				PaddingBottom = UDim.new(0, 12),
+			})
+			new("UIListLayout", {
+				Parent = holder,
+				Padding = UDim.new(0, 4),
+				SortOrder = Enum.SortOrder.LayoutOrder,
+			})
+
+			local titleLabel = new("TextLabel", {
+				Parent = holder,
+				LayoutOrder = 1,
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Font = Enum.Font.GothamBold,
+				Text = title,
+				RichText = true,
+				TextWrapped = true,
+				TextColor3 = Theme.Text,
+				TextSize = 14,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Visible = title ~= "",
+			})
+
+			local contentLabel = new("TextLabel", {
+				Parent = holder,
+				LayoutOrder = 2,
+				BackgroundTransparency = 1,
+				Size = UDim2.new(1, 0, 0, 0),
+				AutomaticSize = Enum.AutomaticSize.Y,
+				Font = Enum.Font.Gotham,
+				Text = content,
+				RichText = true,
+				TextWrapped = true,
+				TextColor3 = Theme.SubText,
+				TextSize = 12,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Visible = content ~= "",
+			})
+
+			return {
+				SetTitle = function(_, newTitle)
+					newTitle = newTitle or ""
+					titleLabel.Text = newTitle
+					titleLabel.Visible = newTitle ~= ""
+				end,
+				SetContent = function(_, newContent)
+					newContent = newContent or ""
+					contentLabel.Text = newContent
+					contentLabel.Visible = newContent ~= ""
+				end,
+				GetTitle = function()
+					return titleLabel.Text
+				end,
+				GetContent = function()
+					return contentLabel.Text
+				end,
+			}
 		end
 
 		----------------------------------------------------------------
