@@ -1,6 +1,7 @@
 -- made with claude ai
 -- if you don't like this please ignore.
 
+
 local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
 local Players           = game:GetService("Players")
@@ -1057,7 +1058,7 @@ function Library:CreateWindow(config)
 				ScrollBarThickness = 3,
 				ScrollBarImageColor3 = Theme.GradientA,
 				CanvasSize = UDim2.new(0, 0, 0, 0),
-				AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y,
+				AutomaticCanvasSize = Enum.AutomaticSize.Y,
 			})
 			new("UIPadding", {
 				Parent = list,
