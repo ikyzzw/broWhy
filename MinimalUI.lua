@@ -1,6 +1,5 @@
 -- made with claude ai
 -- if you don't like this please ignore.
--- basics from VapeV4
 
 local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
@@ -212,6 +211,7 @@ function Library:CreateWindow(config)
 		TextColor3 = Theme.Text,
 		TextSize = 14,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		RichText = true,
 	})
 
 	local closeBtn = new("TextButton", {
@@ -401,6 +401,19 @@ function Library:CreateWindow(config)
 			end
 		end
 	end)
+
+	-- Floating layer dropdown menus render into (WindUI's "New Elements"
+	-- dropdown opens as an overlay panel instead of pushing the row below
+	-- it down), plus a slot for whichever dropdown is currently open so a
+	-- second one can close it before opening itself.
+	local dropdownGui = new("ScreenGui", {
+		Name = "MinimalUI_Dropdowns",
+		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+		ResetOnSpawn = false,
+		DisplayOrder = 10,
+		Parent = LocalPlayer:WaitForChild("PlayerGui"),
+	})
+	local activeDropdownClose = nil
 
 	local Window = {
 		_tabs = {},
@@ -709,6 +722,12 @@ function Library:CreateWindow(config)
 		end
 
 		----------------------------------------------------------------
+		-- WindUI "New Elements" toggle: a fully pill-shaped track (radius
+		-- = half the row height, same look WindUI gets from its 23px
+		-- corner radius on a New Elements row) plus a knob that responds
+		-- to both a plain click and a drag -- drag it partway and let go,
+		-- it snaps to whichever side it's closer to, exactly like WindUI's
+		-- draggable switch.
 		function Tab:CreateToggle(text, default, callback)
 			local state = default or false
 
@@ -717,13 +736,13 @@ function Library:CreateWindow(config)
 				Size = UDim2.new(1, 0, 0, 38),
 				BackgroundColor3 = Theme.Element,
 			})
-			corner(holder, 8)
+			corner(holder, 19)
 
 			new("TextLabel", {
 				Parent = holder,
 				BackgroundTransparency = 1,
-				Position = UDim2.new(0, 12, 0, 0),
-				Size = UDim2.new(1, -70, 1, 0),
+				Position = UDim2.new(0, 14, 0, 0),
+				Size = UDim2.new(1, -78, 1, 0),
 				Font = Enum.Font.Gotham,
 				Text = text,
 				TextColor3 = Theme.Text,
@@ -731,60 +750,114 @@ function Library:CreateWindow(config)
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
 
-			local switch = new("TextButton", {
+			local track = new("Frame", {
 				Parent = holder,
 				AnchorPoint = Vector2.new(1, 0.5),
 				Position = UDim2.new(1, -12, 0.5, 0),
-				Size = UDim2.new(0, 40, 0, 20),
+				Size = UDim2.new(0, 48, 0, 22),
 				BackgroundColor3 = Theme.ElementHi,
-				AutoButtonColor = false,
-				Text = "",
 			})
-			corner(switch, 10)
+			corner(track, 11)
+			stroke(track, Theme.Stroke, 1, 0.4)
 
 			-- gradient fill layer, crossfaded in when ON
 			local fill = new("Frame", {
-				Parent = switch,
+				Parent = track,
 				Size = UDim2.new(1, 0, 1, 0),
 				BackgroundColor3 = Theme.GradientA,
 				BackgroundTransparency = 1,
 			})
-			corner(fill, 10)
+			corner(fill, 11)
 			gradient(fill, Theme.GradientA, Theme.GradientB, 0)
 
-			local knob = new("Frame", {
-				Parent = switch,
-				AnchorPoint = Vector2.new(0, 0.5),
-				Position = UDim2.new(0, 2, 0.5, 0),
-				Size = UDim2.new(0, 16, 0, 16),
-				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			})
-			corner(knob, 8)
+			local knobSize = 16
+			local padding = 3
+			local travel = track.Size.X.Offset - knobSize - padding * 2
 
-			local function render(instant)
-				local knobPos = state and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
-				local fillTransparency = state and 0 or 1
+			local knob = new("Frame", {
+				Parent = track,
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.new(0, padding, 0.5, 0),
+				Size = UDim2.new(0, knobSize, 0, knobSize),
+				BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+				ZIndex = 2,
+			})
+			corner(knob, knobSize / 2)
+			local knobScale = new("UIScale", { Parent = knob, Scale = 1 })
+
+			local hitbox = new("TextButton", {
+				Parent = track,
+				Size = UDim2.new(1, 0, 1, 0),
+				BackgroundTransparency = 1,
+				AutoButtonColor = false,
+				Text = "",
+				ZIndex = 3,
+			})
+
+			local function render(instant, on)
+				local knobPos = on and UDim2.new(0, padding + travel, 0.5, 0) or UDim2.new(0, padding, 0.5, 0)
+				local fillTransparency = on and 0 or 1
 				if instant then
 					knob.Position = knobPos
 					fill.BackgroundTransparency = fillTransparency
 				else
-					tween(knob, { Position = knobPos }, 0.2)
-					tween(fill, { BackgroundTransparency = fillTransparency }, 0.2)
+					tween(knob, { Position = knobPos }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+					tween(fill, { BackgroundTransparency = fillTransparency }, 0.15, Enum.EasingStyle.Quint)
 				end
 			end
-			render(true)
+			render(true, state)
 
-			switch.MouseButton1Click:Connect(function()
-				state = not state
-				render(false)
-				pcall(callback, state)
+			local function set(v, fire)
+				state = v
+				render(false, state)
+				if fire ~= false then
+					pcall(callback, state)
+				end
+			end
+
+			-- plain click anywhere on the track
+			hitbox.MouseButton1Click:Connect(function()
+				set(not state)
+			end)
+
+			-- drag the knob itself and release to snap to the nearest side
+			local dragging = false
+			knob.InputBegan:Connect(function(input)
+				if input.UserInputType ~= Enum.UserInputType.MouseButton1
+					and input.UserInputType ~= Enum.UserInputType.Touch then
+					return
+				end
+				dragging = true
+				tween(knobScale, { Scale = 1.2 }, 0.15)
+			end)
+
+			UserInputService.InputChanged:Connect(function(input)
+				if not dragging then return end
+				if input.UserInputType ~= Enum.UserInputType.MouseMovement
+					and input.UserInputType ~= Enum.UserInputType.Touch then
+					return
+				end
+				local rel = (input.Position.X - track.AbsolutePosition.X - padding - knobSize / 2) / travel
+				rel = math.clamp(rel, 0, 1)
+				knob.Position = UDim2.new(0, padding + travel * rel, 0.5, 0)
+				fill.BackgroundTransparency = 1 - rel
+			end)
+
+			UserInputService.InputEnded:Connect(function(input)
+				if not dragging then return end
+				if input.UserInputType ~= Enum.UserInputType.MouseButton1
+					and input.UserInputType ~= Enum.UserInputType.Touch then
+					return
+				end
+				dragging = false
+				tween(knobScale, { Scale = 1 }, 0.15)
+				local rel = (knob.Position.X.Offset - padding) / travel
+				set(rel > 0.5)
 			end)
 
 			return {
 				Set = function(_, v)
-					state = v
-					render(false)
-					pcall(callback, state)
+					set(v)
 				end,
 				Get = function()
 					return state
@@ -890,25 +963,34 @@ function Library:CreateWindow(config)
 		end
 
 		----------------------------------------------------------------
+		-- WindUI "New Elements" dropdown: the trigger is a pill-shaped
+		-- row (same rounding as the New Elements toggle above), and
+		-- opening it doesn't push anything else in the tab down --
+		-- instead it drops a floating panel on its own overlay layer,
+		-- positioned next to the row and flipped upward automatically if
+		-- there isn't room below it on screen, matching WindUI's overlay
+		-- dropdown menu.
 		function Tab:CreateDropdown(text, options, default, callback)
 			options = options or {}
 			local selected = default or options[1]
 			local open = false
 			local optionButtons = {} -- opt -> button, so Set()/highlight can find it
 
+			local ROW_HEIGHT = 30
+			local MAX_MENU_HEIGHT = 220
+
 			local holder = new("Frame", {
 				Parent = page,
 				Size = UDim2.new(1, 0, 0, 38),
 				BackgroundColor3 = Theme.Element,
-				ClipsDescendants = true,
 			})
-			corner(holder, 8)
+			corner(holder, 19)
 
 			new("TextLabel", {
 				Parent = holder,
 				BackgroundTransparency = 1,
-				Position = UDim2.new(0, 12, 0, 0),
-				Size = UDim2.new(0.5, 0, 0, 38),
+				Position = UDim2.new(0, 14, 0, 0),
+				Size = UDim2.new(0.5, 0, 1, 0),
 				Font = Enum.Font.Gotham,
 				Text = text,
 				TextColor3 = Theme.Text,
@@ -916,13 +998,12 @@ function Library:CreateWindow(config)
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
 
-			local selectedLabel = new("TextButton", {
+			local selectedLabel = new("TextLabel", {
 				Parent = holder,
-				AnchorPoint = Vector2.new(1, 0),
-				Position = UDim2.new(1, -30, 0, 0),
-				Size = UDim2.new(0.5, -30, 0, 38),
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -32, 0.5, 0),
+				Size = UDim2.new(0.5, -32, 1, 0),
 				BackgroundTransparency = 1,
-				AutoButtonColor = false,
 				Font = Enum.Font.Gotham,
 				Text = tostring(selected or ""),
 				TextColor3 = Theme.SubText,
@@ -934,7 +1015,7 @@ function Library:CreateWindow(config)
 			local chevron = new("TextLabel", {
 				Parent = holder,
 				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -12, 0, 19),
+				Position = UDim2.new(1, -12, 0.5, 0),
 				Size = UDim2.new(0, 14, 0, 14),
 				BackgroundTransparency = 1,
 				Font = Enum.Font.GothamBold,
@@ -943,16 +1024,61 @@ function Library:CreateWindow(config)
 				TextSize = 12,
 			})
 
-			local list = new("Frame", {
+			-- covers the whole row so clicking anywhere opens/closes it,
+			-- sits above the labels so it still receives the click
+			local hitbox = new("TextButton", {
 				Parent = holder,
-				Position = UDim2.new(0, 0, 0, 38),
-				Size = UDim2.new(1, 0, 0, 0),
+				Size = UDim2.new(1, 0, 1, 0),
 				BackgroundTransparency = 1,
+				AutoButtonColor = false,
+				Text = "",
+				ZIndex = 2,
 			})
-			local listLayout = new("UIListLayout", {
+
+			-- the floating panel itself, parented to the overlay layer so
+			-- it renders above every tab/page instead of resizing `holder`
+			local menu = new("Frame", {
+				Name = "DropdownMenu",
+				Parent = dropdownGui,
+				BackgroundColor3 = Theme.Panel,
+				Visible = false,
+				ClipsDescendants = true,
+				Size = UDim2.new(0, 0, 0, 0),
+			})
+			corner(menu, 10)
+			local menuStroke = stroke(menu, Theme.Stroke, 1)
+			gradient(menuStroke, Theme.GradientA, Theme.GradientB, 45)
+
+			local list = new("ScrollingFrame", {
+				Parent = menu,
+				Size = UDim2.new(1, 0, 1, 0),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				ScrollBarThickness = 3,
+				ScrollBarImageColor3 = Theme.GradientA,
+				CanvasSize = UDim2.new(0, 0, 0, 0),
+				AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y,
+			})
+			new("UIPadding", {
+				Parent = list,
+				PaddingTop = UDim.new(0, 4),
+				PaddingBottom = UDim.new(0, 4),
+				PaddingLeft = UDim.new(0, 4),
+				PaddingRight = UDim.new(0, 4),
+			})
+			new("UIListLayout", {
 				Parent = list,
 				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding = UDim.new(0, 2),
 			})
+
+			local openMenu, closeMenu -- forward-declared, buildOptions() below calls closeMenu()
+
+			local function computeHeight()
+				local count = math.max(#options, 1)
+				local contentHeight = count * ROW_HEIGHT + (count - 1) * 2 + 8
+				return math.clamp(contentHeight, ROW_HEIGHT + 8, MAX_MENU_HEIGHT)
+			end
 
 			-- Rebuilds the option list from scratch. Used both on first
 			-- build and by Refresh() when the options change at runtime.
@@ -969,7 +1095,7 @@ function Library:CreateWindow(config)
 					local optBtn = new("TextButton", {
 						Parent = list,
 						LayoutOrder = i,
-						Size = UDim2.new(1, 0, 0, 30),
+						Size = UDim2.new(1, 0, 0, ROW_HEIGHT),
 						BackgroundColor3 = Theme.ElementHi,
 						BackgroundTransparency = isSelected and 0.4 or 1,
 						AutoButtonColor = false,
@@ -979,6 +1105,7 @@ function Library:CreateWindow(config)
 						TextSize = 12,
 						TextXAlignment = Enum.TextXAlignment.Left,
 					})
+					corner(optBtn, 6)
 					optionButtons[opt] = optBtn
 
 					optBtn.MouseEnter:Connect(function()
@@ -1002,22 +1129,87 @@ function Library:CreateWindow(config)
 						selectedLabel.Text = tostring(opt)
 						tween(optBtn, { BackgroundTransparency = 0.4 }, 0.12)
 						tween(optBtn, { TextColor3 = Theme.Text }, 0.12)
-						open = false
-						tween(chevron, { Rotation = 0 }, 0.2)
-						tween(holder, { Size = UDim2.new(1, 0, 0, 38) }, 0.2)
 						pcall(callback, selected)
+						closeMenu()
 					end)
 				end
 			end
 			buildOptions()
 
-			selectedLabel.MouseButton1Click:Connect(function()
-				open = not open
-				local target = open
-					and UDim2.new(1, 0, 0, 38 + #options * 30)
-					or UDim2.new(1, 0, 0, 38)
-				tween(chevron, { Rotation = open and 180 or 0 }, 0.2)
-				tween(holder, { Size = target }, 0.2)
+			-- positions + sizes the panel next to `holder`, flipping to
+			-- open upward if there isn't room below it on screen
+			local function layoutMenu(targetHeight)
+				local pos = holder.AbsolutePosition
+				local size = holder.AbsoluteSize
+				local viewportY = screenGui.AbsoluteSize.Y
+				local spaceBelow = viewportY - (pos.Y + size.Y) - 8
+				local openUp = spaceBelow < targetHeight and pos.Y > spaceBelow
+
+				local menuWidth = math.max(size.X, 170)
+				local x = pos.X + size.X - menuWidth
+				local y = openUp and (pos.Y - targetHeight - 6) or (pos.Y + size.Y + 6)
+
+				menu.Position = UDim2.fromOffset(x, y)
+				return menuWidth
+			end
+
+			openMenu = function()
+				if activeDropdownClose then
+					activeDropdownClose()
+				end
+
+				local targetHeight = computeHeight()
+				local menuWidth = layoutMenu(targetHeight)
+				menu.Size = UDim2.new(0, menuWidth, 0, 0)
+				menu.Visible = true
+				open = true
+				tween(chevron, { Rotation = 180 }, 0.2)
+				tween(menu, { Size = UDim2.new(0, menuWidth, 0, targetHeight) }, 0.22, Enum.EasingStyle.Quint)
+				activeDropdownClose = closeMenu
+			end
+
+			closeMenu = function()
+				if not open then return end
+				open = false
+				tween(chevron, { Rotation = 0 }, 0.2)
+				local closeTween = tween(menu, { Size = UDim2.new(0, menu.Size.X.Offset, 0, 0) }, 0.18)
+				closeTween.Completed:Once(function()
+					if not open then
+						menu.Visible = false
+					end
+				end)
+				if activeDropdownClose == closeMenu then
+					activeDropdownClose = nil
+				end
+			end
+
+			hitbox.MouseButton1Click:Connect(function()
+				if open then
+					closeMenu()
+				else
+					openMenu()
+				end
+			end)
+
+			-- click outside the row or the open panel closes it
+			UserInputService.InputBegan:Connect(function(input)
+				if not open then return end
+				if input.UserInputType ~= Enum.UserInputType.MouseButton1
+					and input.UserInputType ~= Enum.UserInputType.Touch then
+					return
+				end
+				local pos = input.Position
+				local function inside(gui)
+					local p, s = gui.AbsolutePosition, gui.AbsoluteSize
+					return pos.X >= p.X and pos.X <= p.X + s.X and pos.Y >= p.Y and pos.Y <= p.Y + s.Y
+				end
+				if not inside(holder) and not inside(menu) then
+					closeMenu()
+				end
+			end)
+
+			holder.Destroying:Connect(function()
+				menu:Destroy()
 			end)
 
 			return {
@@ -1059,7 +1251,9 @@ function Library:CreateWindow(config)
 					end
 					buildOptions()
 					if open then
-						tween(holder, { Size = UDim2.new(1, 0, 0, 38 + #options * 30) }, 0.2)
+						local targetHeight = computeHeight()
+						local menuWidth = layoutMenu(targetHeight)
+						tween(menu, { Size = UDim2.new(0, menuWidth, 0, targetHeight) }, 0.2)
 					end
 				end,
 			}
