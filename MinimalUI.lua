@@ -1,7 +1,6 @@
 -- made with claude ai
 -- if you don't like this please ignore.
 
-
 local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
 local Players           = game:GetService("Players")
@@ -9,9 +8,6 @@ local RunService        = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 
---============================================================
--- THEME
---============================================================
 local Theme = {
 	Background = Color3.fromRGB(18, 18, 22),
 	Panel      = Color3.fromRGB(26, 26, 32),
@@ -24,16 +20,9 @@ local Theme = {
 	GradientB  = Color3.fromRGB(56, 189, 248),
 }
 
---============================================================
--- HELPERS
---============================================================
 local function new(class, props, children)
 	local inst = Instance.new(class)
 	if inst:IsA("GuiObject") then
-		-- Roblox defaults every Frame/Button/Label to a 1px border. Left on,
-		-- this is exactly what shows up as a stray line along frame edges
-		-- (e.g. between the tab sidebar and the page content). Kill it here
-		-- once so nothing has to remember to do it per-element.
 		inst.BorderSizePixel = 0
 	end
 	for k, v in pairs(props or {}) do
@@ -108,12 +97,6 @@ local function makeDraggable(handle, target)
 	end)
 end
 
---============================================================
--- ICONS (https://github.com/Footagesus/Icons)
---============================================================
--- loadstring/game:HttpGetAsync only exist inside an executor environment,
--- not in a plain Studio LocalScript, so this is wrapped in pcall -- if it's
--- unavailable, icons are silently skipped instead of erroring the library.
 local IconsV2
 do
 	local ok, result = pcall(function()
@@ -124,8 +107,6 @@ do
 	end
 end
 
--- Accepts a lucide name ("house"), an sf-symbols name ("sfsymbols:HouseFill"),
--- or an already-resolved rbxassetid:// / rbxasset:// string.
 local function resolveIcon(icon)
 	if not icon or icon == "" then
 		return nil
@@ -142,9 +123,6 @@ local function resolveIcon(icon)
 	return nil
 end
 
---============================================================
--- LIBRARY
---============================================================
 local Library = {}
 
 function Library:CreateWindow(config)
@@ -215,31 +193,25 @@ function Library:CreateWindow(config)
 		RichText = true,
 	})
 
-	local closeBtn = new("TextButton", {
-		Parent = TopBar,
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -14, 0.5, 0),
-		Size = UDim2.new(0, 22, 0, 22),
-		BackgroundColor3 = Theme.Element,
-		AutoButtonColor = false,
-		Font = Enum.Font.GothamBold,
-		Text = "x",
-		TextColor3 = Theme.SubText,
-		TextSize = 14,
+	local closeBtn = new("ImageLabel", {
+      Parent = TopBar,
+      BackgroundTransparency = 1,
+      AnchorPoint = Vector2.new(1, 0.5),
+	  Position = UDim2.new(1, -14, 0.5, 0),
+	  Size = UDim2.new(0, 22, 0, 22),
+      Image = resolveIcon("minus"),
+      ImageColor3 = Theme.Text,
 	})
 	corner(closeBtn, 6)
-
-	local minimizeBtn = new("TextButton", {
-		Parent = TopBar,
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -42, 0.5, 0),
-		Size = UDim2.new(0, 22, 0, 22),
-		BackgroundColor3 = Theme.Element,
-		AutoButtonColor = false,
-		Font = Enum.Font.GothamBold,
-		Text = "-",
-		TextColor3 = Theme.SubText,
-		TextSize = 16,
+	
+	local minimizeBtn = new("ImageLabel", {
+      Parent = TopBar,
+      BackgroundTransparency = 1,
+      AnchorPoint = Vector2.new(1, 0.5),
+	  Position = UDim2.new(1, -42, 0.5, 0),
+	  Size = UDim2.new(0, 22, 0, 22),
+      Image = resolveIcon("x"),
+      ImageColor3 = Theme.Text,
 	})
 	corner(minimizeBtn, 6)
 
@@ -279,14 +251,14 @@ function Library:CreateWindow(config)
 			ImageColor3 = Theme.Text,
 		})
 	else
-		new("TextLabel", {
+		new("ImageLabel", {
 			Parent = indicator,
 			BackgroundTransparency = 1,
-			Size = UDim2.new(1, 0, 1, 0),
-			Font = Enum.Font.GothamBold,
-			Text = "=",
-			TextColor3 = Theme.Text,
-			TextSize = 18,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0.5, 0),
+			Size = UDim2.new(0, 22, 0, 22),
+			Image = resolveIcon("house"),
+			ImageColor3 = Theme.Text,
 		})
 	end
 
@@ -985,13 +957,13 @@ function Library:CreateWindow(config)
 				Size = UDim2.new(1, 0, 0, 38),
 				BackgroundColor3 = Theme.Element,
 			})
-			corner(holder, 19)
+			corner(holder, 10)
 
 			new("TextLabel", {
 				Parent = holder,
 				BackgroundTransparency = 1,
-				Position = UDim2.new(0, 14, 0, 0),
-				Size = UDim2.new(0.5, 0, 1, 0),
+				Position = UDim2.new(0, 12, 0, 0),
+				Size = UDim2.new(1, -112, 1, 0),
 				Font = Enum.Font.Gotham,
 				Text = text,
 				TextColor3 = Theme.Text,
@@ -999,36 +971,46 @@ function Library:CreateWindow(config)
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
 
-			local selectedLabel = new("TextLabel", {
-				Parent = holder,
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -32, 0.5, 0),
-				Size = UDim2.new(0.5, -32, 1, 0),
-				BackgroundTransparency = 1,
-				Font = Enum.Font.Gotham,
-				Text = tostring(selected or ""),
-				TextColor3 = Theme.SubText,
-				TextSize = 12,
-				TextTruncate = Enum.TextTruncate.AtEnd,
-				TextXAlignment = Enum.TextXAlignment.Right,
-			})
-
-			local chevron = new("TextLabel", {
+			-- compact pill "chip" -- the actual clickable control, holding
+			-- the current value + chevron, same shape as the Config list
+			-- control in the reference screenshot
+			local chip = new("Frame", {
 				Parent = holder,
 				AnchorPoint = Vector2.new(1, 0.5),
 				Position = UDim2.new(1, -12, 0.5, 0),
-				Size = UDim2.new(0, 14, 0, 14),
+				Size = UDim2.new(0, 96, 0, 26),
+				BackgroundColor3 = Theme.ElementHi,
+			})
+			corner(chip, 13)
+			stroke(chip, Theme.Stroke, 1, 0.5)
+
+			local selectedLabel = new("TextLabel", {
+				Parent = chip,
+				Position = UDim2.new(0, 10, 0, 0),
+				Size = UDim2.new(1, -28, 1, 0),
 				BackgroundTransparency = 1,
-				Font = Enum.Font.GothamBold,
-				Text = "v",
+				Font = Enum.Font.Gotham,
+				Text = tostring(selected or "--"),
 				TextColor3 = Theme.SubText,
 				TextSize = 12,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				TextXAlignment = Enum.TextXAlignment.Left,
 			})
-
-			-- covers the whole row so clicking anywhere opens/closes it,
-			-- sits above the labels so it still receives the click
+            
+            local chevron = new("ImageLabel", {
+			    Parent = chip,
+			    BackgroundTransparency = 1,
+			    AnchorPoint = Vector2.new(1, 0.5),
+			    Position = UDim2.new(1, -8, 0.5, 0),
+			    Size = UDim2.new(0, 12, 0, 12),
+			    Image = resolveIcon("chevron-down"),
+			    ImageColor3 = Theme.Text,
+	    	})
+		
+			-- only the chip is interactive, matching the reference --
+			-- the row label itself is just context, not a button
 			local hitbox = new("TextButton", {
-				Parent = holder,
+				Parent = chip,
 				Size = UDim2.new(1, 0, 1, 0),
 				BackgroundTransparency = 1,
 				AutoButtonColor = false,
@@ -1137,17 +1119,19 @@ function Library:CreateWindow(config)
 			end
 			buildOptions()
 
-			-- positions + sizes the panel next to `holder`, flipping to
-			-- open upward if there isn't room below it on screen
+			-- positions + sizes the panel right under `chip` (the circled
+			-- control), flipping to open upward if there isn't room below
+			-- it on screen, and clamped so it never runs off the right edge
 			local function layoutMenu(targetHeight)
-				local pos = holder.AbsolutePosition
-				local size = holder.AbsoluteSize
+				local pos = chip.AbsolutePosition
+				local size = chip.AbsoluteSize
+				local viewportX = screenGui.AbsoluteSize.X
 				local viewportY = screenGui.AbsoluteSize.Y
 				local spaceBelow = viewportY - (pos.Y + size.Y) - 8
 				local openUp = spaceBelow < targetHeight and pos.Y > spaceBelow
 
 				local menuWidth = math.max(size.X, 170)
-				local x = pos.X + size.X - menuWidth
+				local x = math.clamp(pos.X, 8, viewportX - menuWidth - 8)
 				local y = openUp and (pos.Y - targetHeight - 6) or (pos.Y + size.Y + 6)
 
 				menu.Position = UDim2.fromOffset(x, y)
