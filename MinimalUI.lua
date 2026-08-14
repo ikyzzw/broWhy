@@ -193,24 +193,26 @@ function Library:CreateWindow(config)
 		RichText = true,
 	})
 
-	local closeBtn = new("ImageLabel", {
+	local closeBtn = new("ImageButton", {
       Parent = TopBar,
       BackgroundTransparency = 1,
       AnchorPoint = Vector2.new(1, 0.5),
 	  Position = UDim2.new(1, -14, 0.5, 0),
 	  Size = UDim2.new(0, 22, 0, 22),
-      Image = resolveIcon("minus"),
+      AutoButtonColor = false,
+      Image = resolveIcon("x"),
       ImageColor3 = Theme.Text,
 	})
 	corner(closeBtn, 6)
 	
-	local minimizeBtn = new("ImageLabel", {
+	local minimizeBtn = new("ImageButton", {
       Parent = TopBar,
       BackgroundTransparency = 1,
       AnchorPoint = Vector2.new(1, 0.5),
 	  Position = UDim2.new(1, -42, 0.5, 0),
 	  Size = UDim2.new(0, 22, 0, 22),
-      Image = resolveIcon("x"),
+      AutoButtonColor = false,
+      Image = resolveIcon("minus"),
       ImageColor3 = Theme.Text,
 	})
 	corner(minimizeBtn, 6)
